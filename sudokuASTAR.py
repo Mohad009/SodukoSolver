@@ -1,8 +1,7 @@
 import heapq #This is used to implement priority queue for A* algorithm
-from copy import deepcopy # 
-import tkinter as tk
-from tkinter import messagebox
-
+from copy import deepcopy #deepcopy function used to create deep copies of objects without modifying the original
+import tkinter as tk # GUI library
+from tkinter import messagebox #this is to show the message
 class SudokuSolver:
     def __init__(self, board):
         self.board = board
@@ -32,12 +31,14 @@ class SudokuSolver:
         start = deepcopy(self.board)
         pq = [(self.heuristic(start), start)]
         heapq.heapify(pq)
+        steps = 0  # Initialize step counter
         
         while pq:
             _, current = heapq.heappop(pq)
+            steps += 1  # Increment step counter for each state expansion
             empty = self.find_empty(current)
             if not empty:
-                return current
+                return current, steps  # Return both solution and step count
             row, col = empty
             
             for num in range(1, 10):
@@ -45,8 +46,8 @@ class SudokuSolver:
                     new_board = deepcopy(current)
                     new_board[row][col] = num
                     heapq.heappush(pq, (self.heuristic(new_board), new_board))
-        return None
-
+        return None, steps
+    
 class SudokuGUI:
     def __init__(self, root, board):
         self.root = root
@@ -62,18 +63,22 @@ class SudokuGUI:
                 entry.grid(row=i, column=j, padx=5, pady=5)
                 if self.board[i][j] != 0:
                     entry.insert(0, str(self.board[i][j]))
-                    entry.config(state='disabled')
                 row_entries.append(entry)
             self.entries.append(row_entries)
         
         solve_button = tk.Button(self.root, text="Solve", command=self.solve)
         solve_button.grid(row=9, column=4, pady=10)
+        
+        self.steps_label = tk.Label(self.root, text="")  # Label to display steps
+        self.steps_label.grid(row=10, column=0, columnspan=9)
 
     def solve(self):
-        solver = SudokuSolver(self.get_board())
-        solution = solver.a_star()
+        board = self.get_board()
+        solver = SudokuSolver(board)
+        solution, steps = solver.a_star()
         if solution:
             self.display_solution(solution)
+            self.steps_label.config(text=f"Cost (steps taken): {steps}")  # Update steps label
         else:
             messagebox.showerror("Error", "No solution exists")
 
@@ -90,11 +95,8 @@ class SudokuGUI:
     def display_solution(self, solution):
         for i in range(9):
             for j in range(9):
-                self.entries[i][j].config(state='normal')
                 self.entries[i][j].delete(0, tk.END)
                 self.entries[i][j].insert(0, str(solution[i][j]))
-                if self.board[i][j] != 0:
-                    self.entries[i][j].config(state='disabled')
 
 # Example Sudoku board (0 represents empty cells)
 board = [
@@ -110,6 +112,6 @@ board = [
 ]
 
 root = tk.Tk()
-root.title("Sudoku Solver")
+root.title("Interactive Sudoku Solver")
 app = SudokuGUI(root, board)
 root.mainloop()

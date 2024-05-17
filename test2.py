@@ -1,12 +1,14 @@
 import heapq #This is used to implement priority queue for A* algorithm
-from copy import deepcopy # 
-import tkinter as tk
-from tkinter import messagebox
+from copy import deepcopy #deepcopy function used to create deep copies of objects without modifying the original
+import tkinter as tk # GUI library
+from tkinter import messagebox #this is to show the message
 
+#This class implement the A* algorithm
 class SudokuSolver:
-    def __init__(self, board):
+    def __init__(self, board): # the constructor will initializes the board
         self.board = board
 
+    #This method will checks the validity of the sudoku according to sudoku rules
     def is_valid(self, board, row, col, num):
         for i in range(9):
             if board[row][i] == num or board[i][col] == num:
@@ -17,24 +19,28 @@ class SudokuSolver:
                 if board[i][j] == num:
                     return False
         return True
-
+    #This method finds the next emtpy cell in the board
+    #it return the location of the empty cell
     def find_empty(self, board):
         for i in range(9):
             for j in range(9):
                 if board[i][j] == 0:
                     return i, j
         return None
-
+    #this method estimates the cost to reach the goal state
     def heuristic(self, board):
         return sum(row.count(0) for row in board)
-
+    
+    #implementatoin of A* algorithm
     def a_star(self):
         start = deepcopy(self.board)
         pq = [(self.heuristic(start), start)]
         heapq.heapify(pq)
+        steps=0
         
         while pq:
             _, current = heapq.heappop(pq)
+            steps+=1
             empty = self.find_empty(current)
             if not empty:
                 return current
@@ -45,7 +51,7 @@ class SudokuSolver:
                     new_board = deepcopy(current)
                     new_board[row][col] = num
                     heapq.heappush(pq, (self.heuristic(new_board), new_board))
-        return None
+        return None,steps
 
 class SudokuGUI:
     def __init__(self, root, board):
@@ -62,7 +68,6 @@ class SudokuGUI:
                 entry.grid(row=i, column=j, padx=5, pady=5)
                 if self.board[i][j] != 0:
                     entry.insert(0, str(self.board[i][j]))
-                    entry.config(state='disabled')
                 row_entries.append(entry)
             self.entries.append(row_entries)
         
@@ -70,10 +75,12 @@ class SudokuGUI:
         solve_button.grid(row=9, column=4, pady=10)
 
     def solve(self):
-        solver = SudokuSolver(self.get_board())
+        board = self.get_board()
+        solver = SudokuSolver(board)
         solution = solver.a_star()
         if solution:
             self.display_solution(solution)
+            self.steps_label.config(text=f"Cost (steps taken): {steps}")
         else:
             messagebox.showerror("Error", "No solution exists")
 
@@ -90,11 +97,8 @@ class SudokuGUI:
     def display_solution(self, solution):
         for i in range(9):
             for j in range(9):
-                self.entries[i][j].config(state='normal')
                 self.entries[i][j].delete(0, tk.END)
                 self.entries[i][j].insert(0, str(solution[i][j]))
-                if self.board[i][j] != 0:
-                    self.entries[i][j].config(state='disabled')
 
 # Example Sudoku board (0 represents empty cells)
 board = [
@@ -110,6 +114,6 @@ board = [
 ]
 
 root = tk.Tk()
-root.title("Sudoku Solver")
+root.title("Interactive Sudoku Solver")
 app = SudokuGUI(root, board)
 root.mainloop()
