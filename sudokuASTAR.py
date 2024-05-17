@@ -4,8 +4,9 @@ import tkinter as tk # GUI library
 from tkinter import messagebox #this is to show the message
 class SudokuSolver:
     def __init__(self, board):
-        self.board = board
+        self.board = board # Initializes the solver with the given Sudoku board
 
+    # Checks if placing a number in a specific cell is valid according to Sudoku rules.
     def is_valid(self, board, row, col, num):
         for i in range(9):
             if board[row][i] == num or board[i][col] == num:
@@ -16,7 +17,8 @@ class SudokuSolver:
                 if board[i][j] == num:
                     return False
         return True
-
+   
+   # Finds the next empty cell in the Sudoku board
     def find_empty(self, board):
         for i in range(9):
             for j in range(9):
@@ -24,9 +26,10 @@ class SudokuSolver:
                     return i, j
         return None
 
-    def heuristic(self, board):
+    def heuristic(self, board): #Estimates the cost to reach the goal state by counting the number of empty cells.
         return sum(row.count(0) for row in board)
 
+    #Solves the Sudoku puzzle using the A* algorithm.
     def a_star(self):
         start = deepcopy(self.board)
         pq = [(self.heuristic(start), start)]
@@ -47,15 +50,17 @@ class SudokuSolver:
                     new_board[row][col] = num
                     heapq.heappush(pq, (self.heuristic(new_board), new_board))
         return None, steps
-    
-class SudokuGUI:
-    def __init__(self, root, board):
+
+
+class SudokuGUI: # A class to create a graphical user interface for solving Sudoku puzzles.
+    def __init__(self, root, board): #Initializes the GUI with the given root window and Sudoku board.
         self.root = root
         self.board = board
         self.entries = []
         self.create_widgets()
 
     def create_widgets(self):
+        #Creates the widgets for the GUI, including the grid of Entry widgets for the Sudoku cells and the Solve button.
         for i in range(9):
             row_entries = []
             for j in range(9):
@@ -73,6 +78,10 @@ class SudokuGUI:
         self.steps_label.grid(row=10, column=0, columnspan=9)
 
     def solve(self):
+        """
+        Solves the Sudoku puzzle and updates the GUI with the solution.
+        If no solution exists, shows an error message.
+        """
         board = self.get_board()
         solver = SudokuSolver(board)
         solution, steps = solver.a_star()
@@ -82,6 +91,7 @@ class SudokuGUI:
         else:
             messagebox.showerror("Error", "No solution exists")
 
+    #Retrieves the current state of the board from the Entry widgets
     def get_board(self):
         board = []
         for i in range(9):
@@ -92,6 +102,7 @@ class SudokuGUI:
             board.append(row)
         return board
 
+    #  Updates the Entry widgets with the solution values.
     def display_solution(self, solution):
         for i in range(9):
             for j in range(9):
@@ -110,8 +121,8 @@ board = [
     [0, 0, 0, 4, 1, 9, 0, 0, 5],
     [0, 0, 0, 0, 8, 0, 0, 7, 9]
 ]
-
+# Set up the Tkinter root window
 root = tk.Tk()
-root.title("Interactive Sudoku Solver")
-app = SudokuGUI(root, board)
-root.mainloop()
+root.title("Interactive Sudoku Solver") 
+app = SudokuGUI(root, board) # Initialize the GUI application
+root.mainloop() # Start the main event loop
